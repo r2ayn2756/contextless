@@ -105,7 +105,7 @@ PORT=3001
 #### **Routes: compress.js**
 
 **POST /api/compress** endpoint must:
-1. Validate input (max 500K characters)
+1. Validate input (max 5M characters)
 2. Determine if chunking needed (chunk if >100K chars)
 3. Call Claude API with optimization prompt
 4. Return structured response

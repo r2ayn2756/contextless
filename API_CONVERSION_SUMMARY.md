@@ -155,7 +155,7 @@ Both modes work simultaneously!
 ✅ **Authentication Ready** - Optional API key support
 ✅ **CORS Enabled** - Works with web applications
 ✅ **Error Handling** - Comprehensive error responses
-✅ **Large Text Support** - Handles up to 500K characters
+✅ **Large Text Support** - Handles up to 5M characters
 ✅ **Auto-Chunking** - Automatic processing of large texts
 ✅ **Health Checks** - Built-in monitoring endpoint
 

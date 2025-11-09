@@ -156,7 +156,7 @@ The API returns error responses with this format:
 **Common Error Codes:**
 - `INVALID_INPUT` - Invalid or missing text
 - `EMPTY_INPUT` - Empty text provided
-- `TEXT_TOO_LARGE` - Text exceeds 500K characters
+- `TEXT_TOO_LARGE` - Text exceeds 5M characters
 - `INVALID_COMPRESSION_LEVEL` - Invalid compression level
 - `RATE_LIMIT` - Rate limit exceeded
 - `PROCESSING_ERROR` - General processing error

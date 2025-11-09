@@ -62,7 +62,7 @@ Health check endpoint.
 
 ## Features
 
-- Handles texts up to 500K characters
+- Handles texts up to 5M characters
 - **⚡ Parallel chunk processing** - processes multiple chunks simultaneously for 5-8x speedup
 - Automatic chunking for large texts (>15K chars)
 - Smart chunking with 10K character chunks for optimal speed
@@ -109,7 +109,7 @@ The API returns structured error responses:
 **Error Codes:**
 - `INVALID_INPUT`: Missing or invalid text input
 - `EMPTY_INPUT`: Text is empty
-- `TEXT_TOO_LARGE`: Text exceeds 500K character limit
+- `TEXT_TOO_LARGE`: Text exceeds 5M character limit
 - `INVALID_COMPRESSION_LEVEL`: Invalid compression level specified
 - `RATE_LIMIT`: API rate limit exceeded
 - `API_CONFIG_ERROR`: API key configuration issue

@@ -56,7 +56,7 @@ Content-Type: application/json
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `text` | string | Yes | The text to compress (max 500,000 characters) |
+| `text` | string | Yes | The text to compress (max 5,000,000 characters) |
 | `compressionLevel` | string | No | Compression level: `aggressive`, `balanced`, or `minimal`. Default: `balanced` |
 
 **Compression Levels**:

@@ -41,10 +41,10 @@ router.post('/compress', async (req, res) => {
       });
     }
 
-    // Max character limit: 500K characters
-    if (text.length > 500000) {
+    // Max character limit: 5M characters
+    if (text.length > 5000000) {
       return res.status(400).json({
-        error: 'Text exceeds maximum length of 500,000 characters',
+        error: 'Text exceeds maximum length of 5,000,000 characters',
         code: 'TEXT_TOO_LARGE'
       });
     }

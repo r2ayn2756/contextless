@@ -20,7 +20,7 @@ An AI-powered context optimization tool that compresses large text into token-ef
 - Client libraries for Node.js and Python
 - Optional API key authentication
 - CORS enabled for cross-origin requests
-- Handles up to 500K characters
+- Handles up to 5M characters
 - Automatic text chunking for large inputs
 
 ## Tech Stack
@@ -198,7 +198,7 @@ Large texts (>100K characters) are automatically split into manageable chunks wi
 - User-friendly error messages
 
 ### Performance
-- Handles up to 500K characters
+- Handles up to 5M characters
 - Optimized API calls with chunking
 - 60-second timeout for large texts
 - Non-blocking UI during processing
