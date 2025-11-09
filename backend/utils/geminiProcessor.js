@@ -17,7 +17,7 @@ function initializeGemini() {
     model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
-        maxOutputTokens: 4096, // Limit output to speed up generation
+        maxOutputTokens: 8192, // Increased from 4096 to handle larger outputs
         temperature: 0.3,
       }
     });
@@ -121,41 +121,83 @@ async function processChunks(chunks, compressionLevel = 'balanced', requestId = 
   const totalChunks = chunks.length;
 
   console.log(`[${requestId}] Starting processing of ${totalChunks} chunk(s) with ${compressionLevel} compression`);
-  console.log(`[${requestId}] Using PARALLEL processing for maximum speed!`);
 
   const startTime = Date.now();
 
-  // Process ALL chunks in parallel for maximum speed!
-  const chunkPromises = chunks.map((chunk, i) => {
-    console.log(`[${requestId}] Launching chunk ${i + 1}/${totalChunks} (${chunk.length} characters)...`);
-    return processChunk(chunk, compressionLevel, requestId)
-      .then(result => {
-        console.log(`[${requestId}] ✓ Chunk ${i + 1}/${totalChunks} completed`);
-        return { index: i, result };
-      })
-      .catch(error => {
-        console.error(`[${requestId}] ✗ Chunk ${i + 1}/${totalChunks} failed:`, error.message);
-        throw error;
-      });
-  });
+  // Limit parallel processing to avoid rate limits (process in batches of 10)
+  const BATCH_SIZE = 10;
+  const results = [];
 
-  // Wait for all chunks to complete
-  const completedChunks = await Promise.all(chunkPromises);
+  if (totalChunks <= BATCH_SIZE) {
+    console.log(`[${requestId}] Using PARALLEL processing (${totalChunks} chunks)`);
+
+    // Process ALL chunks in parallel for small batches
+    const chunkPromises = chunks.map((chunk, i) => {
+      console.log(`[${requestId}] Launching chunk ${i + 1}/${totalChunks} (${chunk.length} characters)...`);
+      return processChunk(chunk, compressionLevel, requestId)
+        .then(result => {
+          console.log(`[${requestId}] ✓ Chunk ${i + 1}/${totalChunks} completed`);
+          return { index: i, result };
+        })
+        .catch(error => {
+          console.error(`[${requestId}] ✗ Chunk ${i + 1}/${totalChunks} failed:`, error.message);
+          throw error;
+        });
+    });
+
+    // Wait for all chunks to complete
+    const completedChunks = await Promise.all(chunkPromises);
+    results.push(...completedChunks);
+  } else {
+    console.log(`[${requestId}] Using BATCHED processing (${totalChunks} chunks in batches of ${BATCH_SIZE})`);
+
+    // Process in batches to avoid rate limits
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(chunks.length / BATCH_SIZE);
+      const batch = chunks.slice(i, i + BATCH_SIZE);
+
+      console.log(`[${requestId}] Processing batch ${batchNumber}/${totalBatches} (${batch.length} chunks)...`);
+
+      const batchPromises = batch.map((chunk, batchIndex) => {
+        const chunkIndex = i + batchIndex;
+        console.log(`[${requestId}] Launching chunk ${chunkIndex + 1}/${totalChunks}...`);
+        return processChunk(chunk, compressionLevel, requestId)
+          .then(result => {
+            console.log(`[${requestId}] ✓ Chunk ${chunkIndex + 1}/${totalChunks} completed`);
+            return { index: chunkIndex, result };
+          })
+          .catch(error => {
+            console.error(`[${requestId}] ✗ Chunk ${chunkIndex + 1}/${totalChunks} failed:`, error.message);
+            throw error;
+          });
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+
+      // Small delay between batches to respect rate limits
+      if (i + BATCH_SIZE < chunks.length) {
+        console.log(`[${requestId}] Waiting 1s before next batch...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
 
   // Sort by original index to maintain order
-  completedChunks.sort((a, b) => a.index - b.index);
-  const results = completedChunks.map(c => c.result);
+  results.sort((a, b) => a.index - b.index);
+  const processedResults = results.map(c => c.result);
 
   const endTime = Date.now();
   const totalTime = ((endTime - startTime) / 1000).toFixed(2);
-  console.log(`[${requestId}] All ${totalChunks} chunk(s) processed successfully in ${totalTime}s (parallel)`);
+  console.log(`[${requestId}] All ${totalChunks} chunk(s) processed successfully in ${totalTime}s`);
 
   // Combine results
-  const combinedSummary = results.length > 1
-    ? `This content was processed in ${results.length} parts. ` + results.map((r, i) => `Part ${i + 1}: ${r.summary}`).join(' ')
-    : results[0].summary;
+  const combinedSummary = processedResults.length > 1
+    ? `This content was processed in ${processedResults.length} parts. ` + processedResults.map((r, i) => `Part ${i + 1}: ${r.summary}`).join(' ')
+    : processedResults[0].summary;
 
-  const combinedOptimized = results.map(r => r.optimizedContent).join('\n\n---\n\n');
+  const combinedOptimized = processedResults.map(r => r.optimizedContent).join('\n\n---\n\n');
 
   return {
     summary: combinedSummary,
