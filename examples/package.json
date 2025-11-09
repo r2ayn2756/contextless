@@ -1,0 +1,25 @@
+{
+  "name": "contextless-api-examples",
+  "version": "1.0.0",
+  "description": "Example client implementations for the ContextLess API",
+  "main": "client.js",
+  "scripts": {
+    "example": "node client.js",
+    "test": "node client.js"
+  },
+  "keywords": [
+    "contextless",
+    "api",
+    "client",
+    "text-compression",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

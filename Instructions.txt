@@ -1,0 +1,352 @@
+# ContextLess MVP - Implementation Guide
+
+**ROLE**: You are an expert full-stack developer building a production-ready MVP with clean code and beautiful UI.
+
+**OBJECTIVE**: Create "ContextLess" - an AI-powered context optimization tool that compresses large text into token-efficient summaries. This is for a hackathon, so prioritize speed without sacrificing quality.
+
+---
+
+## 📋 IMPLEMENTATION REQUIREMENTS
+
+### **1. FRONTEND (React + Vite + Tailwind)**
+
+#### **Setup & Configuration**
+```bash
+npm create vite@latest frontend -- --template react
+cd frontend
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npm install axios framer-motion lucide-react
+npx tailwindcss init -p
+```
+
+#### **Tailwind Configuration for Glassmorphism**
+Configure `tailwind.config.js` with:
+- Backdrop blur utilities
+- Custom glass morphism colors with alpha channels
+- Apple-style shadows and gradients
+- Smooth animations
+
+**Design System**:
+- **Primary Glass**: `bg-white/10 backdrop-blur-2xl border border-white/20`
+- **Accent Colors**: Blue gradients (`from-blue-400 to-purple-500`)
+- **Shadows**: Soft, multi-layered shadows for depth
+- **Borders**: Subtle 1px borders with transparency
+- **Animations**: Smooth transitions (300ms ease-in-out)
+
+#### **Component Requirements**
+
+**App.jsx** - Main container:
+- Full viewport height with gradient background (purple to blue gradient)
+- Center-aligned glass card container
+- Responsive design (mobile-first)
+
+**TextInput.jsx**:
+- Large textarea (min-height: 300px) with glass morphism styling
+- Character counter in bottom-right
+- Placeholder: "Paste your large context here..."
+- Rounded corners (rounded-2xl)
+- Focus state: Enhanced glow effect
+
+**CompressionControls.jsx**:
+- Three buttons: "Aggressive", "Balanced", "Minimal"
+- Selected state: Solid background with glow
+- Unselected: Glass morphism
+- Icons from lucide-react
+
+**ProcessingStatus.jsx**:
+- Animated loading spinner with pulsing effect
+- Progress text: "Processing your context..."
+- Smooth fade-in animation
+
+**OptimizedOutput.jsx**:
+- Two sections: Summary (top) and Optimized Content (bottom)
+- Each in separate glass cards
+- Copy button (top-right) with success feedback
+- Token savings badge showing percentage
+- Syntax: Use `pre` tag with `whitespace-pre-wrap`
+
+**UI/UX Requirements**:
+- ✅ All text should be readable (white/gray-100 on dark glass)
+- ✅ Buttons must have hover states with scale transform
+- ✅ Loading states for all async actions
+- ✅ Error handling with toast notifications
+- ✅ Mobile responsive (stack vertically on <768px)
+- ✅ Smooth page transitions using framer-motion
+- ✅ Copy button should show "Copied!" for 2 seconds
+
+---
+
+### **2. BACKEND (Node.js + Express)**
+
+#### **Setup**
+```bash
+mkdir backend && cd backend
+npm init -y
+npm install express cors dotenv @anthropic-ai/sdk
+npm install -D nodemon
+```
+
+#### **Environment Variables** (`.env`)
+```
+ANTHROPIC_API_KEY=your_key_here
+PORT=3001
+```
+
+#### **server.js Structure**
+```javascript
+- Express app setup with CORS
+- Body parser (JSON, limit: 50mb for large text)
+- Error handling middleware
+- Rate limiting (optional but recommended)
+- Routes mounted at /api
+```
+
+#### **Routes: compress.js**
+
+**POST /api/compress** endpoint must:
+1. Validate input (max 500K characters)
+2. Determine if chunking needed (chunk if >100K chars)
+3. Call Claude API with optimization prompt
+4. Return structured response
+
+**Chunking Logic** (`utils/textChunker.js`):
+- Split text at sentence boundaries
+- Target chunk size: 50K characters
+- Maintain context overlap (500 chars) between chunks
+- Function: `chunkText(text, maxChunkSize = 50000)`
+
+**Claude Processing** (`utils/claudeProcessor.js`):
+```javascript
+// For each chunk or full text, send this prompt structure:
+
+const systemPrompt = `You are a context optimization expert. Your job is to extract ONLY the essential information from the provided text, removing redundancy, filler words, and unnecessary details while preserving all key facts, data points, and actionable information.
+
+Rules:
+- Preserve ALL important facts, numbers, names, and dates
+- Remove conversational filler and repetition
+- Keep technical terms and specific details
+- Maintain logical flow
+- Output should be 60-80% shorter than input
+- Use clear, concise language`;
+
+const userPrompt = `Optimize this text for AI consumption:
+
+${chunkText}
+
+Provide:
+1. A brief summary (2-3 sentences)
+2. The optimized content with only essential information`;
+```
+
+**Error Handling**:
+- Catch API errors and return user-friendly messages
+- Handle rate limits gracefully
+- Validate API key on startup
+- Log errors without exposing sensitive data
+
+**Token Counting**:
+- Approximate: `tokens ≈ characters / 4`
+- Return original and optimized counts
+- Calculate compression ratio
+
+---
+
+### **3. INTEGRATION**
+
+#### **API Communication**
+Frontend should call backend at `http://localhost:3001/api/compress`
+
+**Error States**:
+- Network error: "Connection failed. Please try again."
+- API error: "Processing failed. Text may be too large."
+- Timeout: Set 60s timeout for large texts
+
+#### **Environment Setup**
+- Frontend: `.env` with `VITE_API_URL=http://localhost:3001`
+- Backend: `.env` with `ANTHROPIC_API_KEY`
+
+---
+
+## 🎨 SPECIFIC STYLING REQUIREMENTS
+
+### **Glassmorphism Implementation**
+```css
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+```
+
+### **Background Gradient**
+```css
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+```
+
+---
+
+## ✅ CRITICAL SUCCESS CRITERIA
+
+1. **Performance**:
+   - Textarea should handle 100K+ characters smoothly
+   - API response time <10s for 50K characters
+   - No UI blocking during processing
+
+2. **Error Prevention**:
+   - Validate all inputs on frontend AND backend
+   - Handle API failures gracefully
+   - Provide clear error messages
+
+3. **UX Polish**:
+   - All interactions should feel instant (optimistic UI)
+   - Loading states for any action >500ms
+   - Visual feedback for all button clicks
+   - Accessible keyboard navigation
+
+4. **Code Quality**:
+   - Use async/await (no callback hell)
+   - Proper error boundaries in React
+   - Clean, commented code
+   - Consistent naming conventions
+
+---
+
+## 🚀 DEPLOYMENT CHECKLIST
+
+1. **Environment Variables**: Never commit API keys
+2. **CORS**: Configure for production domain
+3. **Build**: `npm run build` in frontend
+4. **Test**: All features with various text sizes
+5. **Mobile**: Test on actual mobile device
+
+---
+
+## 📝 TESTING SCENARIOS
+
+Test with:
+1. Short text (500 chars)
+2. Medium text (50K chars)
+3. Large text (200K chars)
+4. Text with special characters
+5. Empty input
+6. Network disconnection
+
+---
+
+## 🏗️ PROJECT STRUCTURE
+```
+context-crusher/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── TextInput.jsx
+│   │   │   ├── CompressionControls.jsx
+│   │   │   ├── ProcessingStatus.jsx
+│   │   │   ├── OptimizedOutput.jsx
+│   │   │   └── GlassCard.jsx
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── package.json
+│   └── vite.config.js
+├── backend/
+│   ├── server.js
+│   ├── routes/
+│   │   └── compress.js
+│   ├── utils/
+│   │   ├── textChunker.js
+│   │   └── claudeProcessor.js
+│   ├── package.json
+│   └── .env
+└── README.md
+```
+
+---
+
+## 📊 API SPECIFICATION
+
+### **POST /api/compress**
+
+**Request**:
+```json
+{
+  "text": "large text content...",
+  "compressionLevel": "aggressive" | "balanced" | "minimal"
+}
+```
+
+**Response**:
+```json
+{
+  "summary": "High-level overview of content",
+  "optimizedContent": "Compressed essential information",
+  "originalTokens": 15000,
+  "optimizedTokens": 3000,
+  "compressionRatio": "80%",
+  "processingTime": 5.2
+}
+```
+
+**Error Response**:
+```json
+{
+  "error": "Error message",
+  "code": "ERROR_CODE"
+}
+```
+
+---
+
+## 🎯 IMPLEMENTATION ORDER
+
+1. **Backend First** (45 minutes):
+   - Set up Express server
+   - Create text chunker utility
+   - Implement Claude API integration
+   - Test with Postman/curl
+
+2. **Frontend Core** (60 minutes):
+   - Set up Vite + Tailwind
+   - Create basic component structure
+   - Implement API integration
+   - Add loading states
+
+3. **Polish** (30 minutes):
+   - Glassmorphism styling
+   - Animations and transitions
+   - Error handling UI
+   - Mobile responsive tweaks
+
+4. **Testing** (15 minutes):
+   - Test all scenarios
+   - Fix critical bugs
+   - Performance check
+
+---
+
+**START IMPLEMENTATION NOW**. Build the backend first (it's simpler), then frontend. Focus on getting core functionality working, then polish the UI. Prioritize the glassmorphism aesthetics - this should look stunning and professional.
+
+If you encounter any ambiguity, choose the solution that:
+1. Works fastest for a hackathon demo
+2. Looks most impressive visually
+3. Handles errors gracefully
+
+**You've got this! Build something beautiful.** 🚀
