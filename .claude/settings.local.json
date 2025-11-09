@@ -14,7 +14,9 @@
       "Bash(taskkill:*)",
       "Bash(findstr:*)",
       "Bash(nul)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
