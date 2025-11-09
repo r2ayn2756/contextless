@@ -124,8 +124,8 @@ async function processChunks(chunks, compressionLevel = 'balanced', requestId = 
 
   const startTime = Date.now();
 
-  // Limit parallel processing to avoid rate limits (process in batches of 10)
-  const BATCH_SIZE = 10;
+  // Limit parallel processing to avoid rate limits (process in batches of 5)
+  const BATCH_SIZE = 5;
   const results = [];
 
   if (totalChunks <= BATCH_SIZE) {

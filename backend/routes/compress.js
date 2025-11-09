@@ -64,18 +64,18 @@ router.post('/compress', async (req, res) => {
     const originalTokens = estimateTokens(text);
     console.log(`[${requestId}] Original tokens: ${originalTokens}`);
 
-    // Determine if chunking is needed (chunk if > 15K characters to prevent timeouts)
+    // Determine if chunking is needed (chunk if > 100K characters)
     let chunks;
-    if (text.length > 15000) {
-      // Use smaller chunks (10K) to prevent API timeouts and speed up processing
-      console.log(`[${requestId}] Text exceeds 15K chars, chunking...`);
-      chunks = chunkText(text, 10000);
+    if (text.length > 100000) {
+      // Use larger chunks (50K) to reduce number of API calls and speed up processing
+      console.log(`[${requestId}] Text exceeds 100K chars, chunking...`);
+      chunks = chunkText(text, 50000);
       console.log(`[${requestId}] Created ${chunks.length} chunks`);
       chunks.forEach((chunk, i) => {
         console.log(`[${requestId}]   Chunk ${i + 1}: ${chunk.length} characters`);
       });
     } else {
-      console.log(`[${requestId}] Text under 30K chars, no chunking needed`);
+      console.log(`[${requestId}] Text under 100K chars, no chunking needed`);
       chunks = [text];
     }
 
